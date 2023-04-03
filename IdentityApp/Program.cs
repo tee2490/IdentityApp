@@ -61,6 +61,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IAccountService,AccountService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
