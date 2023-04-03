@@ -16,7 +16,6 @@ namespace IdentityApp.Controllers
             this.userManager = userManager;
         }
 
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -24,7 +23,6 @@ namespace IdentityApp.Controllers
 
             return Ok(result);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Create(RoleDto roleDto)
@@ -49,7 +47,6 @@ namespace IdentityApp.Controllers
             return StatusCode(201);
         }
 
-
         [HttpPut]
         public async Task<IActionResult> Update(RoleUpdateDto roleUpdateDto)
         {
@@ -73,7 +70,6 @@ namespace IdentityApp.Controllers
 
             return StatusCode(201);
         }
-
 
         [HttpDelete]
         public async Task<IActionResult> Delete(RoleDto roleDto)

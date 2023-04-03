@@ -3,6 +3,7 @@ global using IdentityApp.Data;
 global using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.EntityFrameworkCore;
+global using IdentityApp.Setvices.IService;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using IdentityApp.Setvices;
@@ -59,6 +60,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                        });
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IAccountService,AccountService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

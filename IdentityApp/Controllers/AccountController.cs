@@ -1,5 +1,4 @@
 ﻿using IdentityApp.DTOs;
-using IdentityApp.Setvices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,68 +9,38 @@ namespace IdentityApp.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly TokenService tokenService;
+        private readonly IAccountService accountService;
         private readonly UserManager<ApplicationUser> userManager;
 
-        public AccountController(TokenService tokenService, UserManager<ApplicationUser> userManager)
+        public AccountController(IAccountService accountService, UserManager<ApplicationUser> userManager)
         {
-            this.tokenService = tokenService;
+            this.accountService = accountService;
             this.userManager = userManager;
         }
-
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var result = await userManager.Users.ToListAsync();
-
-            List<Object> users = new();
-
-            foreach (var user in result)
-            {
-                var userRole = await userManager.GetRolesAsync(user);
-                users.Add(new { user.UserName, userRole });
-            }
-
+            var users = await accountService.GetUsersAsync();
             return Ok(users);
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
-            var user = await userManager.FindByNameAsync(loginDto.Username);
+            var user = await accountService.LoginAsync(loginDto);
 
-            if (user == null || !await userManager.CheckPasswordAsync(user, loginDto.Password))
-                return Unauthorized();
+            if (user == null) return Unauthorized();
 
-            var userDto = new UserDto
-            {
-                Email = user.Email,
-                Token = await tokenService.GenerateToken(user),
-            };
+            return Ok(user);
 
-            return Ok(userDto);
         }
-
 
         [HttpPost("register")]
         public async Task<ActionResult> Register(RegisterDto registerDto)
         {
-            var user = new ApplicationUser { UserName = registerDto.Username, Email = registerDto.Email };
-            var result = await userManager.CreateAsync(user, registerDto.Password);
-
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.Code, error.Description);
-                }
-                return ValidationProblem();
-            }
-
-            await userManager.AddToRoleAsync(user, registerDto.Role);
-            return StatusCode(201);
+            var result = await accountService.RegisterAsync(registerDto);
+            return Ok(result);
         }
 
         [HttpGet("TestAdminRole"), Authorize(Roles = "Admin")]
@@ -80,6 +49,12 @@ namespace IdentityApp.Controllers
             return Ok("Authorize Success");
         }
 
+        [HttpGet("GetMeByContext"), Authorize]
+        public IActionResult GetMe()
+        {
+            var result = accountService.GetMe();
+            return Ok(result);
+        }
 
         [HttpGet("GetMeInBaseController"), Authorize]
         public async Task<IActionResult> GetMyName()
@@ -87,10 +62,8 @@ namespace IdentityApp.Controllers
             //var userName = User.FindFirstValue(ClaimTypes.Name);
             var user = await userManager.FindByNameAsync(User.Identity.Name);
             var roles = await userManager.GetRolesAsync(user);
-
             return Ok(new { user.UserName, roles });
         }
-
 
         [HttpGet("GetToken"), Authorize]
         public async Task<IActionResult> GetToken()
